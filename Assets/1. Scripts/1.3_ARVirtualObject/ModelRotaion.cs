@@ -45,14 +45,14 @@ public class ModelRotation : MonoBehaviour
             }
             else if (touch.phase == TouchPhase.Moved)
             {
-                if(currentTransformHit != null)
+                if (currentTransformHit != null)
                 {
                     RotateModel(touch);
                 }
             }
             else if (touch.phase == TouchPhase.Ended)
             {
-                if(currentTransformHit != null)
+                if (currentTransformHit != null)
                 {
                     lastTransformHit = currentTransformHit;
                     returnCoroutine = StartCoroutine(ReturnToOriginalRotation());
@@ -66,8 +66,17 @@ public class ModelRotation : MonoBehaviour
     {
         deltaTouch = touch.deltaPosition;
 
+        if (Mathf.Abs(deltaTouch.x) > Mathf.Abs(deltaTouch.y))
+        {
+            deltaTouch.y = 0;
+        }
+        else
+        {
+            deltaTouch.x = 0;
+        }
+
         float rotationX = deltaTouch.y * rotationSpeed * Time.deltaTime;
-        float rotationY = - deltaTouch.x * rotationSpeed * Time.deltaTime;
+        float rotationY = -deltaTouch.x * rotationSpeed * Time.deltaTime;
 
         Debug.Log(currentTransformHit.name);
 
