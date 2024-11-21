@@ -263,11 +263,11 @@ public class GoalManager : MonoBehaviour
 
     void OnObjectSpawned(GameObject spawnedObject)
     {
-        m_SurfacesTapped++;
-        if (m_CurrentGoal.CurrentGoal == OnboardingGoals.TapSurface && m_SurfacesTapped >= k_NumberOfSurfacesTappedToCompleteGoal)
-        {
-            CompleteGoal();
-        }
+        // m_SurfacesTapped++;
+        // if (m_CurrentGoal.CurrentGoal == OnboardingGoals.TapSurface && m_SurfacesTapped >= k_NumberOfSurfacesTappedToCompleteGoal)
+        // {
+        //     CompleteGoal();
+        // }
     }
 
     /// <summary>

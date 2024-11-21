@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,15 +20,15 @@ public class ARTemplateMenuManager : MonoBehaviour
 {
     [SerializeField]
     [Tooltip("Button that opens the create menu.")]
-    Button m_CreateButton;
+    Button m_ShowMenuButton;
 
     /// <summary>
     /// Button that opens the create menu.
     /// </summary>
-    public Button createButton
+    public Button showMenuButton
     {
-        get => m_CreateButton;
-        set => m_CreateButton = value;
+        get => m_ShowMenuButton;
+        set => m_ShowMenuButton = value;
     }
 
     [SerializeField]
@@ -225,7 +226,7 @@ public class ARTemplateMenuManager : MonoBehaviour
     /// </summary>
     void OnEnable()
     {
-        m_CreateButton.onClick.AddListener(ShowMenu);
+        m_ShowMenuButton.onClick.AddListener(ShowMenu);
         m_CancelButton.onClick.AddListener(HideMenu);
         m_DeleteButton.onClick.AddListener(DeleteFocusedObject);
         m_PlaneManager.planesChanged += OnPlaneChanged;
@@ -237,7 +238,7 @@ public class ARTemplateMenuManager : MonoBehaviour
     void OnDisable()
     {
         m_ShowObjectMenu = false;
-        m_CreateButton.onClick.RemoveListener(ShowMenu);
+        m_ShowMenuButton.onClick.RemoveListener(ShowMenu);
         m_CancelButton.onClick.RemoveListener(HideMenu);
         m_DeleteButton.onClick.RemoveListener(DeleteFocusedObject);
         m_PlaneManager.planesChanged -= OnPlaneChanged;
@@ -263,6 +264,7 @@ public class ARTemplateMenuManager : MonoBehaviour
     /// </summary>
     void Update()
     {
+        m_IsPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1);
         if (m_InitializingDebugMenu)
         {
             m_DebugMenu.gameObject.SetActive(false);
@@ -288,20 +290,17 @@ public class ARTemplateMenuManager : MonoBehaviour
             {
                 m_DeleteButton.gameObject.SetActive(m_InteractionGroup?.focusInteractable != null);
             }
-
-            m_IsPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1);
         }
         else
         {
-            m_IsPointerOverUI = false;
-            m_CreateButton.gameObject.SetActive(true);
+            m_ShowMenuButton.gameObject.SetActive(true);
             m_DeleteButton.gameObject.SetActive(m_InteractionGroup?.focusInteractable != null);
         }
 
-        if (!m_IsPointerOverUI && m_ShowOptionsModal)
-        {
-            m_IsPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1);
-        }
+        // if (!m_IsPointerOverUI && m_ShowOptionsModal)
+        // {
+        //     m_IsPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1);
+        // }
     }
 
     /// <summary>
@@ -332,13 +331,15 @@ public class ARTemplateMenuManager : MonoBehaviour
 
     void ShowMenu()
     {
+        Debug.Log("DADA");
         m_ShowObjectMenu = true;
         m_ObjectMenu.SetActive(true);
         if (!m_ObjectMenuAnimator.GetBool("Show"))
         {
+            Debug.Log("show2");
             m_ObjectMenuAnimator.SetBool("Show", true);
         }
-        AdjustARDebugMenuPosition();
+        // AdjustARDebugMenuPosition();
     }
 
     /// <summary>
@@ -409,6 +410,7 @@ public class ARTemplateMenuManager : MonoBehaviour
     /// </summary>
     public void HideMenu()
     {
+        Debug.Log("hide menu");
         m_ObjectMenuAnimator.SetBool("Show", false);
         m_ShowObjectMenu = false;
         AdjustARDebugMenuPosition();
@@ -434,7 +436,7 @@ public class ARTemplateMenuManager : MonoBehaviour
 
     void InitializeDebugMenuOffsets()
     {
-        if (m_CreateButton.TryGetComponent<RectTransform>(out var buttonRect))
+        if (m_ShowMenuButton.TryGetComponent<RectTransform>(out var buttonRect))
             m_ObjectButtonOffset = new Vector2(0f, buttonRect.anchoredPosition.y + buttonRect.rect.height + 10f);
         else
             m_ObjectButtonOffset = new Vector2(0f, 200f);

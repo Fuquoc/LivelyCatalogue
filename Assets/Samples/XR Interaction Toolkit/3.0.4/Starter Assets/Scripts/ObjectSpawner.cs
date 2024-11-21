@@ -119,6 +119,18 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         }
 
         [SerializeField]
+        [Tooltip("")]
+        bool m_ApplyLookAtPlayerCameraAngle = true;
+
+        /// <summary>
+        /// </summary>
+        public bool applyFixedAngleAtSpawn
+        {
+            get => m_ApplyLookAtPlayerCameraAngle;
+            set => m_ApplyLookAtPlayerCameraAngle = value;
+        }
+
+        [SerializeField]
         [Tooltip("The range in degrees that the object will randomly be rotated about the y axis when spawned, " +
             "in relation to the direction of the spawn point to the camera.")]
         float m_SpawnAngleRange = 45f;
@@ -151,6 +163,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         /// </summary>
         /// <seealso cref="TrySpawnObject"/>
         public event Action<GameObject> objectSpawned;
+        public GameObject currentARObject;
 
         /// <summary>
         /// See <see cref="MonoBehaviour"/>.
@@ -215,7 +228,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             var facePosition = m_CameraToFace.transform.position;
             var forward = facePosition - spawnPoint;
             BurstMathUtility.ProjectOnPlane(forward, spawnNormal, out var projectedForward);
-            newObject.transform.rotation = Quaternion.LookRotation(projectedForward, spawnNormal);
+            
+            if(m_ApplyLookAtPlayerCameraAngle)
+            {
+                newObject.transform.rotation = Quaternion.LookRotation(projectedForward, spawnNormal);
+            }
 
             if (m_ApplyRandomAngleAtSpawn)
             {
@@ -231,6 +248,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             }
 
             objectSpawned?.Invoke(newObject);
+            currentARObject = newObject;
             return true;
         }
     }
