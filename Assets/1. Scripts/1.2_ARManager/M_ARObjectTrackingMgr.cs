@@ -8,37 +8,136 @@ namespace ARGame2
 {
     public class M_ARObjectTrackingMgr : MonoBehaviour
     {
+        [SerializeField] private ARSession _aRSession;
         [SerializeField] private ARTrackedImageManager aRTrackedImageManager;
+        [SerializeField] private List<ARObjectData> _listARObject;
+        [SerializeField] private Transform _camera;
 
-        [SerializeField] private GameObject _demoGameobject;
+        private Dictionary<string, TrackedVirtualObject> _dictTrackedObject;
 
-        private TrackedVirtualObject cube;
+        private bool _isFix = false; //giữ AR Object cố định trong 3D World, không update theo image tracking
+        private bool _isPause; //dừng cập nhập hình ảnh
+        private bool _isShowInfo;
+
+        private void Awake() 
+        {
+            _dictTrackedObject = new Dictionary<string, TrackedVirtualObject>();
+        }
 
         private void OnEnable() 
         {
             aRTrackedImageManager.trackedImagesChanged += OnImageChange;       
+            UIFuncButton.ShowInfoARGenesis += ShowInfoAR;
+            UIFuncButton.OnOpenInventory += PauseTracking;
+            GenesisInventory.OnCloseInventory += ResumeTracking;
+        }
+
+        private void OnDisable() 
+        {
+            aRTrackedImageManager.trackedImagesChanged -= OnImageChange;
+            UIFuncButton.ShowInfoARGenesis -= ShowInfoAR;
+            UIFuncButton.OnOpenInventory -= PauseTracking;
+            GenesisInventory.OnCloseInventory -= ResumeTracking;
         }
 
         private void OnImageChange(ARTrackedImagesChangedEventArgs args)
         {
+            if(_isPause) return;
+
             foreach(var image in args.added)
             {
-                Debug.Log("CREATE");
-                var newPrefab = Instantiate(_demoGameobject, Vector3.zero, Quaternion.identity);
-                cube = new TrackedVirtualObject();
-                cube.Add(image, newPrefab);
+                CreateARObject(image);
             }   
 
             foreach(var image in args.updated)
             {
-                cube.TryToUpdate(image);
+                if(_isFix) return;
+                string key = image.referenceImage.name;
+                if (_dictTrackedObject.ContainsKey(key))
+                {
+                    _dictTrackedObject[key].TryToUpdate(image);
+                }
+                else 
+                {
+                    CreateARObject(image);
+                }
             }
 
-            foreach(var image in args.updated)
+            foreach(var image in args.removed)
             {
-
+                Debug.Log(image.referenceImage.name + " remove");
             }
         }
+
+        private void CreateARObject(ARTrackedImage aRTrackedImage)
+        {
+            Debug.Log("CREATE " + aRTrackedImage.referenceImage.name + "_" + _dictTrackedObject.Count);
+            ARGenesisBall newPrefab = Instantiate(GetGameObject(aRTrackedImage.referenceImage.name), Vector3.zero, Quaternion.identity);
+            newPrefab.ShowInfo(_isShowInfo);
+            var newTrackedVirtualObject = new TrackedVirtualObject();
+            newTrackedVirtualObject.Add(aRTrackedImage, newPrefab.gameObject, newPrefab);
+            _dictTrackedObject.Add(aRTrackedImage.referenceImage.name, newTrackedVirtualObject);
+        }
+
+        public void FixedVirtualObject(int value)
+        {
+            _isFix = value == 0 ? false : true;
+
+            if(_isFix == false)
+            {
+                DeActiveAll();
+            }
+        }
+
+        public void ShowInfoAR(bool isShow)
+        {
+            _isShowInfo = isShow;
+
+            foreach(var ar in _dictTrackedObject)
+            {
+                ar.Value._aRGenesisBall.ShowInfo(isShow);
+            }
+        }
+
+        public void PauseTracking()
+        {
+            _isPause = true;
+
+            DeActiveAll();
+        }
+
+        public void ResumeTracking()
+        {
+            _isPause = false;
+        }
+
+        private void DeActiveAll()
+        {
+            foreach(var ob in _dictTrackedObject.Values)
+            {
+                ob.Deactivate();
+            }
+        }
+
+        public ARGenesisBall GetGameObject(string imageName)
+        {
+            foreach(var dt in _listARObject)
+            {
+                if(dt.imageName == imageName)
+                {
+                    return dt.aRGenesisBall;
+                } 
+            }
+
+            return null;
+        }
+    }
+
+    [Serializable]
+    public class ARObjectData
+    {
+        public string imageName;
+        public ARGenesisBall aRGenesisBall;
     }
 }
 

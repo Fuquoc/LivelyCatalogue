@@ -10,6 +10,9 @@ namespace ARGame2
     public class TrackedVirtualObject
     {
         private GameObject _virtualObject;
+        public GameObject virtualObject => _virtualObject;
+
+        public ARGenesisBall _aRGenesisBall;
 
         private bool _isUpdateRot;
 
@@ -25,9 +28,11 @@ namespace ARGame2
         public bool CheckTimeIdle => _checkTimeIdle;
 
         
-        public void Add(ARTrackedImage trackedImage, GameObject instantiatedPref)
+        public void Add(ARTrackedImage trackedImage, GameObject instantiatedPref, ARGenesisBall aRGenesisBall)
         {
             _virtualObject = instantiatedPref;
+            
+            _aRGenesisBall = aRGenesisBall;
 
             _virtualObject.transform.SetPositionAndRotation(trackedImage.transform.position,
                                                                trackedImage.transform.rotation);
@@ -38,16 +43,35 @@ namespace ARGame2
 
         public void TryToUpdate(ARTrackedImage trackedImage)
         {
-            Debug.Log("AR DEBUG: " + trackedImage.referenceImage.name + " " + trackedImage.trackingState);
+            // Debug.Log("AR DEBUG: " + trackedImage.referenceImage.name + " " + trackedImage.trackingState);
+            #if UNITY_IOS
+                TryToUpdateForIOS(trackedImage);
+            #elif UNITY_ANDROID
+                TryToUpdateForAndroid(trackedImage);
+            #endif
+        }
+
+        private void TryToUpdateForIOS(ARTrackedImage trackedImage)
+        {
             if (trackedImage.trackingState == TrackingState.Tracking)
             {
-
-#if UNITY_IOS
-                _virtualObject.transform.SetPositionAndRotation(trackedImage.transform.position,
+                _virtualObject.transform.SetLocalPositionAndRotation(trackedImage.transform.position,
                                                                 trackedImage.transform.rotation);
+                // _virtualObject.transform.SetPositionAndRotation(trackedImage.transform.position,
+                //                                                 trackedImage.transform.rotation);
                 Activate();
-#else// !UNITY_IOS
+            }
+            else
+            {
+                Deactivate();
+            }
 
+        }
+
+        private void TryToUpdateForAndroid(ARTrackedImage trackedImage)
+        {
+            if (trackedImage.trackingState == TrackingState.Tracking)
+            {
                 //--------------------------------------------
                 //try to reduce rotation jitter for Android
                 //--------------------------------------------
@@ -94,8 +118,6 @@ namespace ARGame2
 
                     Activate();
                 }
-#endif
-
             }
             else
             {
@@ -106,7 +128,7 @@ namespace ARGame2
 
         public void Activate()
         {
-            Debug.Log("Activate");
+            // Debug.Log("Activate");
             _checkTimeIdle = false;
             if (_virtualObject.activeSelf == true) { return; }
 
@@ -115,7 +137,7 @@ namespace ARGame2
 
         public void Deactivate()
         {
-            Debug.Log("Deactivate");
+            // Debug.Log("Deactivate");
             _checkTimeIdle = true;
             if(_virtualObject.activeSelf == false) { return; }
 
